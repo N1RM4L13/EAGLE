@@ -1,7 +1,7 @@
 import argparse
 
 parser = argparse.ArgumentParser(description='sp')
-parser.add_argument('--basepath', type=str, default='/home/lyh/weights/hf/vicuna_v13/7B/')
+parser.add_argument('--basepath', type=str, default='eagle/qwen2.5-7b-instruct-local')
 parser.add_argument('--configpath', type=str, default="config.json")
 parser.add_argument('--lr', type=float, default=3e-5)
 parser.add_argument('--bs', type=int, default=4)
@@ -40,6 +40,7 @@ train_config = {
     "grad_clip": 0.5,
     "save_freq": 5
 }
+
 import json
 from safetensors import safe_open
 # from transformers import AutoModelForCausalLM, AutoTokenizer,AutoModelForSequenceClassification
@@ -68,7 +69,7 @@ from transformers import get_linear_schedule_with_warmup, AutoConfig
 if accelerator.is_main_process:
     import wandb
 
-    wandb.init(project="ess", entity="yuhui-li", config=train_config)
+    wandb.init(project="EAGLE", entity="dgdeadlyghost13", config=train_config)
 
 baseconfig = AutoConfig.from_pretrained(args.basepath)
 
@@ -298,9 +299,36 @@ else:
     aug = None
 
 datapath = list_files(train_config["datapath"])
-
-traindatapath = datapath[:int(len(datapath) * 0.95)]
-testdatapath = datapath[int(len(datapath) * 0.95):]
+if len(datapath) <= 1:
+    # If there's only one file, read it and split the contents instead of splitting files
+    print(f"Only {len(datapath)} file(s) found. Loading and splitting content instead of files.")
+    
+    # Load the JSON file
+    import json
+    with open(datapath[0], 'r') as f:
+        data_content = json.load(f)
+    
+    # Split the data from the JSON file
+    train_size = int(len(data_content) * 0.95)
+    train_data = data_content[:train_size]
+    test_data = data_content[train_size:]
+    
+    # Create temporary files for train and test
+    train_file = os.path.join(train_config["datapath"], "train_split.json")
+    test_file = os.path.join(train_config["datapath"], "test_split.json")
+    
+    with open(train_file, 'w') as f:
+        json.dump(train_data, f)
+    
+    with open(test_file, 'w') as f:
+        json.dump(test_data, f)
+    
+    traindatapath = [train_file]
+    testdatapath = [test_file]
+else:
+    # Original code for multiple files
+    traindatapath = datapath[:int(len(datapath) * 0.95)]
+    testdatapath = datapath[int(len(datapath) * 0.95):]
 # print('td',train_config["datapath"])
 # print(datapath)
 # exit()

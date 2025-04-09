@@ -41,8 +41,6 @@ except:
     from utils import prepare_logits_processor
 
 
-
-
 # Copied from transformers.models.bart.modeling_bart._make_causal_mask
 def _make_causal_mask(
         input_ids_shape: torch.Size, dtype: torch.dtype, device: torch.device, past_key_values_length: int = 0
@@ -478,6 +476,8 @@ class Model(nn.Module):
     def __init__(self, config, load_emb=False, path=None, bias=True, total_tokens=63, depth=5, top_k=8, threshold=1.0):
         super().__init__()
         self.config=config
+        if not hasattr(self.config, "draft_vocab_size"):
+            self.config.draft_vocab_size = self.config.vocab_size
         self.gradient_checkpointing = True
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size

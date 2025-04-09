@@ -111,7 +111,8 @@ def get_model_answers(
         torch_dtype=torch.float16,
         low_cpu_mem_usage=True,
         # load_in_8bit=True,
-        device_map="auto"
+        device_map="auto",
+        use_eagle3=False
     )
 
     tokenizer = model.get_tokenizer()

@@ -38,6 +38,8 @@ class EaModel(nn.Module):
         super().__init__()
         self.base_model = base_model
         self.config = base_model.config
+        if not hasattr(self.config, "draft_vocab_size"):
+            self.config.draft_vocab_size = self.config.vocab_size
         self.hidden_size = base_model.lm_head.weight.shape[-1]
         self.vocab_size = base_model.lm_head.weight.shape[0]
         self.base_model_name_or_path = base_model_name_or_path
